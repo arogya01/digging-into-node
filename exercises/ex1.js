@@ -15,6 +15,7 @@ var path = require("path");
 var fs = require('fs');
 
 
+// using env to setup the base path
 var BASE_PATH = path.resolve(
   process.env.BASE_PATH || __dirname
 );
