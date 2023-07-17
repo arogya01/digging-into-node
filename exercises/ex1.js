@@ -2,7 +2,7 @@
 
 "use strict";
 var util = require('util');
-var getStdin = require("get-stdin");
+// var getStdin = require("get-stdin");
 // args, essentially is an object, where in
 // the first el is "_", which contains all the elements that minimist or our program couldn't process
 // the second one is boolean params
@@ -20,36 +20,41 @@ var BASE_PATH = path.resolve(
   process.env.BASE_PATH || __dirname
 );
 
+// right now, we've been pulling in files as strings, but we can also pull in files as streams
+// same outcome, but much more efficient and how you ought to do it this in nodejs
+// so
+
 if (args.help) {
   printHelp();
 }
 else if (args.in) {
   // handling content flowing in from stdin
   // getStdin works on the promise mechanism..
-  getStdin().then(processFile).catch(error);
+  processFile(process.stdin);
 }
 else if (args.file) {
-  fs.readFile(path.join(BASE_PATH, args.file), function onContents(err, contents) {
-    if (err) error(err.toString())
-    else {
-      processFile(contents.toString());
-    }
-  });
-
-  processFile(path.resolve(args.file));
+  let stream = fs.createReadStream(path.join(BASE_PATH, args.file));
+  processFile(stream);
 }
 else {
   error("Incorrect usage", true);
 }
 
 
-function processFile(contents) {
+function processFile(inStream) {
   // read the content from the file, contents is type Buffer over here
   // console.log("the type of contents is : " + typeof contents + contents);
-  contents = contents.toString().toUpperCase();
+  // contents = contents.toString().toUpperCase();
   // spit it out on the terminal
-  process.stdout.write(contents);
+  // process.stdout.write(contents);
+  var outStream = inStream; 
+  var target = process.stdout; 
+  outStream.pipe(target)
 }
+
+// even using streams, we can only read and write about 64kb of data at a time, 
+// which begs the question that how do we handle files that are larger than 64kb
+// well, we can use the "stream" module to create a stream that can handle larger files
 
 function printHelp() {
   console.log("ex1 usage:");
@@ -73,5 +78,5 @@ function error(msg, includeHelp = false) {
 // 1. dont remember how many of the functions are working
 // 2. lets dissect that one by one quickly..
 // 3. we've got three fns -> error , printHelp and processFile..
-// 4. then, we're usign a node module called "minimist" to process the arguments in the nodejs utility..
+// 4. then, we're using a node module called "minimist" to process the arguments in the nodejs utility..
 //
