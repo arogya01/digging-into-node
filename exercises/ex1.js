@@ -13,6 +13,7 @@ var args = require("minimist")(process.argv.slice(2), {
 });
 var path = require("path");
 var fs = require('fs');
+var Transform = require('stream').Transform;
 
 
 // using env to setup the base path
@@ -48,6 +49,15 @@ function processFile(inStream) {
   // spit it out on the terminal
   // process.stdout.write(contents);
   var outStream = inStream; 
+
+  var upperStream = new Transform({
+    transform(chunk,enc, cb){
+      this.push(chunk.toString().toUpperCase());
+      cb();
+    }
+  }); 
+  outStream = outStream.pipe(upperStream); 
+  
   var target = process.stdout; 
   outStream.pipe(target)
 }
